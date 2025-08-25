@@ -4,6 +4,7 @@
 A **demo project** showcasing the design and structure of a property management system.  
 ⚠️ **Note:** This is a demo version and **not fully complete/functional**.  
 👉 If you would like a **personal, fully complete and functional system**, feel free to contact me.
+📧 ibrahimolatomiwa15@gmail.com
 
 ---
 
