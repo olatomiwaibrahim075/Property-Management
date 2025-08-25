@@ -11,6 +11,8 @@ A **demo project** showcasing the design and structure of a property management 
 The Property Management System is designed to help landlords, tenants, and managers handle rental properties efficiently.  
 This demo provides an overview of how such a system could be structured and managed.
 
+🌐 You can preview the demo website here: [Property Management Demo](https://olatomiwaibrahim075.github.io/Property-Management/)
+
 ---
 
 ## 🛠️ Tech Stack
