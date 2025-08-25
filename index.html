@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Author -->
+  <meta name="author" content="Ibrahim Olatomiwa David">
+  <title>Apartment Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+  <style id="app-style">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+    }
+    
+    .auth-container {
+      background-image: url('https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+    
+    .auth-overlay {
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .sidebar {
+      transition: all 0.3s;
+    }
+    
+    .sidebar-item {
+      transition: all 0.2s;
+    }
+    
+    .sidebar-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .apartment-card {
+      transition: transform 0.3s;
+    }
+    
+    .apartment-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .btn-primary {
+      background-color: #4F46E5;
+      color: white;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+      background-color: #4338CA;
+    }
+    
+    .btn-secondary {
+      background-color: #9CA3AF;
+      color: white;
+      transition: all 0.2s;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #6B7280;
+    }
+    
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+    }
+    
+    .loader {
+      border-top-color: #4F46E5;
+      animation: spinner 0.6s linear infinite;
+    }
+    
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .modal {
+      transition: opacity 0.25s ease;
+    }
+    
+    .modal-container {
+      transition: transform 0.25s ease;
+    }
+    
+    .status-pending {
+      background-color: #FEF3C7;
+      color: #92400E;
+    }
+    
+    .status-progress {
+      background-color: #DBEAFE;
+      color: #1E40AF;
+    }
+    
+    .status-completed {
+      background-color: #D1FAE5;
+      color: #065F46;
+    }
+    
+    .status-rejected {
+      background-color: #FEE2E2;
+      color: #B91C1C;
+    }
+    
+    .chart-container {
+      height: 300px;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Auth Screen (default view) -->
+  <div id="auth-screen" class="min-h-screen flex flex-col auth-container">
+    <div class="auth-overlay flex flex-grow items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full">
+        <div class="flex flex-col md:flex-row">
+          <!-- Left Side - Logo & Branding -->
+          <div class="bg-indigo-600 text-white p-8 md:w-1/3 flex flex-col justify-between">
+            <div>
+              <h2 class="text-3xl font-bold mb-2">Apartment Hub</h2>
+              <p class="opacity-75">Simplified property management for landlords and tenants</p>
+            </div>
+            <div class="mt-8">
+              <div class="flex items-center mb-4">
+                <i class="fas fa-home mr-3 text-indigo-300"></i>
+                <span>Easy apartment listings</span>
+              </div>
+              <div class="flex items-center mb-4">
+                <i class="fas fa-dollar-sign mr-3 text-indigo-300"></i>
+                <span>Seamless rent payments</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-tools mr-3 text-indigo-300"></i>
+                <span>Maintenance tracking</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right Side - Auth Forms -->
+          <div class="p-8 md:w-2/3">
+            <div class="flex mb-8">
+              <button id="login-tab" class="pb-2 px-4 font-medium border-b-2 border-indigo-600 text-indigo-600">Login</button>
+              <button id="signup-tab" class="pb-2 px-4 font-medium border-b-2 border-transparent text-gray-500">Sign Up</button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="login-email">Email</label>
+                <input type="email" id="login-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="your@email.com" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="login-password">Password</label>
+                <input type="password" id="login-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" required>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <input type="checkbox" id="remember-me" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
+                  <label for="remember-me" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                </div>
+                <a href="javascript:void(0)" class="text-sm text-indigo-600 hover:text-indigo-800">Forgot password?</a>
+              </div>
+              <div class="pt-2">
+                <button type="submit" class="w-full btn-primary py-2 px-4 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Login
+                </button>
+              </div>
+              <div class="mt-4 text-center">
+                <p class="text-sm text-gray-600">For demo, login as:</p>
+                <div class="flex justify-center space-x-4 mt-2">
+                  <button type="button" id="demo-admin" class="text-sm text-indigo-600 hover:underline">Admin</button>
+                  <button type="button" id="demo-tenant" class="text-sm text-indigo-600 hover:underline">Tenant</button>
+                </div>
+              </div>
+            </form>
+            
+            <!-- Signup Form (hidden by default) -->
+            <form id="signup-form" class="space-y-4 hidden">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for="signup-firstname">First Name</label>
+                  <input type="text" id="signup-firstname" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="John" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for="signup-lastname">Last Name</label>
+                  <input type="text" id="signup-lastname" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Doe" required>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="signup-email">Email</label>
+                <input type="email" id="signup-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="your@email.com" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="signup-password">Password</label>
+                <input type="password" id="signup-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="signup-confirm">Confirm Password</label>
+                <input type="password" id="signup-confirm" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+                <div class="flex space-x-4">
+                  <div class="flex items-center">
+                    <input type="radio" id="account-tenant" name="account-type" value="tenant" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500" checked>
+                    <label for="account-tenant" class="ml-2 block text-sm text-gray-700">Tenant</label>
+                  </div>
+                  <div class="flex items-center">
+                    <input type="radio" id="account-landlord" name="account-type" value="landlord" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
+                    <label for="account-landlord" class="ml-2 block text-sm text-gray-700">Landlord/Manager</label>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-2">
+                <button type="submit" class="w-full btn-primary py-2 px-4 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Create Account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Admin Dashboard (hidden by default) -->
+  <div id="admin-dashboard" class="hidden min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="bg-indigo-800 text-white w-64 flex flex-col sidebar">
+      <div class="p-4 flex items-center justify-between border-b border-indigo-700">
+        <h2 class="text-xl font-bold">Apartment Hub</h2>
+        <button id="collapse-sidebar" class="md:hidden text-white focus:outline-none">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <div class="p-4 border-b border-indigo-700">
+        <div class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <p class="font-medium">Admin User</p>
+            <p class="text-xs text-indigo-300">Property Manager</p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-grow p-2">
+        <ul class="space-y-1">
+          <li>
+            <a href="javascript:void(0)" class="admin-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-white bg-indigo-700" data-target="apartments-section">
+              <i class="fas fa-building w-6"></i>
+              <span>Apartments</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" class="admin-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-indigo-300 hover:text-white" data-target="payments-section">
+              <i class="fas fa-credit-card w-6"></i>
+              <span>Payments</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" class="admin-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-indigo-300 hover:text-white" data-target="maintenance-section">
+              <i class="fas fa-tools w-6"></i>
+              <span>Maintenance</span>
+              <span class="ml-auto bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">3</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" class="admin-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-indigo-300 hover:text-white" data-target="reports-section">
+              <i class="fas fa-chart-bar w-6"></i>
+              <span>Reports</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div class="p-4 border-t border-indigo-700">
+        <a href="javascript:void(0)" id="admin-logout" class="flex items-center text-indigo-300 hover:text-white">
+          <i class="fas fa-sign-out-alt w-6"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Top Navigation -->
+      <header class="bg-white shadow-sm z-10">
+        <div class="flex items-center justify-between px-4 py-3">
+          <div class="flex items-center space-x-2">
+            <button id="mobile-menu-button" class="md:hidden text-gray-600">
+              <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800" id="page-title">Apartments</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <button class="text-gray-600 hover:text-gray-800">
+                <i class="far fa-bell text-xl"></i>
+                <span class="notification-badge bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">4</span>
+              </button>
+            </div>
+            <div class="border-l border-gray-300 h-6"></div>
+            <div class="relative">
+              <button class="flex items-center space-x-1 text-gray-700">
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="hidden md:inline">Admin</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Sections -->
+      <main class="flex-grow p-4 overflow-y-auto bg-gray-50">
+        <!-- Apartments Section -->
+        <section id="apartments-section" class="admin-section">
+          <!-- Top Controls -->
+          <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-2">
+              <div class="relative flex-grow md:max-w-xs">
+                <input type="text" placeholder="Search apartments..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+              <div class="w-40">
+                <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <option value="all">All Status</option>
+                  <option value="available">Available</option>
+                  <option value="occupied">Occupied</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </div>
+            </div>
+            <button id="add-apartment-button" class="btn-primary rounded-lg px-4 py-2 flex items-center justify-center">
+              <i class="fas fa-plus mr-2"></i> Add Apartment
+            </button>
+          </div>
+          
+          <!-- Apartments Table -->
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apartment</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-md bg-cover bg-center bg-gray-300" style="background-image: url('https://cdn.pixabay.com/photo/2014/08/11/21/39/wall-416060_1280.jpg')"></div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Luxury Suite 101</div>
+                        <div class="text-sm text-gray-500">2 bed, 1 bath</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Downtown Area</div>
+                    <div class="text-xs text-gray-500">123 Main St, Apt 101</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-medium">$1,200/mo</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Available</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    -
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-edit"></i></button>
+                    <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash-alt"></i></button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-md bg-cover bg-center bg-gray-300" style="background-image: url('https://cdn.pixabay.com/photo/2017/03/22/17/39/kitchen-2165756_1280.jpg')"></div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Modern Flat 202</div>
+                        <div class="text-sm text-gray-500">1 bed, 1 bath</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Westside Heights</div>
+                    <div class="text-xs text-gray-500">456 Park Ave, Apt 202</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-medium">$950/mo</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Occupied</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Sarah Johnson</div>
+                    <div class="text-xs text-gray-500">Since Jan 2025</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-edit"></i></button>
+                    <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash-alt"></i></button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-md bg-cover bg-center bg-gray-300" style="background-image: url('https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg')"></div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Garden View 303</div>
+                        <div class="text-sm text-gray-500">3 bed, 2 bath</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Sunset District</div>
+                    <div class="text-xs text-gray-500">789 Garden Rd, Apt 303</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-medium">$1,450/mo</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Maintenance</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    -
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-edit"></i></button>
+                    <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash-alt"></i></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 flex items-center justify-between">
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">3</span> of <span class="font-medium">12</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      1
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      2
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      3
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Payments Section -->
+        <section id="payments-section" class="admin-section hidden">
+          <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-2">
+              <div class="relative flex-grow md:max-w-xs">
+                <input type="text" placeholder="Search tenants..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+              <div class="w-40">
+                <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <option value="all">All Payments</option>
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary rounded-lg px-4 py-2 flex items-center justify-center">
+              <i class="fas fa-file-export mr-2"></i> Export Report
+            </button>
+          </div>
+          
+          <!-- Payments Table -->
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apartment</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-500"></i>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Sarah Johnson</div>
+                        <div class="text-sm text-gray-500">sarah@example.com</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Modern Flat 202</div>
+                    <div class="text-xs text-gray-500">456 Park Ave</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-medium">$950.00</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">April 1, 2025</div>
+                    <div class="text-xs text-gray-500">In 2 days</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900">View History</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-500"></i>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Michael Chen</div>
+                        <div class="text-sm text-gray-500">michael@example.com</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Downtown Loft 304</div>
+                    <div class="text-xs text-gray-500">789 High St</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-medium">$1,250.00</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">March 28, 2025</div>
+                    <div class="text-xs text-gray-500">Overdue</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Overdue</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900">View History</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-500"></i>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Jessica Williams</div>
+                        <div class="text-sm text-gray-500">jessica@example.com</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Ocean View 501</div>
+                    <div class="text-xs text-gray-500">123 Beach Rd</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-medium">$1,750.00</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">March 15, 2025</div>
+                    <div class="text-xs text-gray-500">Paid on time</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900">View History</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 flex items-center justify-between">
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">3</span> of <span class="font-medium">8</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      1
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      2
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Maintenance Section -->
+        <section id="maintenance-section" class="admin-section hidden">
+          <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-2">
+              <div class="relative flex-grow md:max-w-xs">
+                <input type="text" placeholder="Search requests..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+              <div class="w-40">
+                <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Maintenance Table -->
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apartment</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted By</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">Leaking faucet in kitchen</div>
+                    <div class="text-sm text-gray-500 truncate max-w-xs">Water is constantly dripping from the kitchen sink faucet...</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Modern Flat 202</div>
+                    <div class="text-xs text-gray-500">456 Park Ave</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Sarah Johnson</div>
+                    <div class="text-xs text-gray-500">sarah@example.com</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Mar 28, 2025</div>
+                    <div class="text-xs text-gray-500">2 days ago</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-pending px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">Pending</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">View</button>
+                    <select class="border border-gray-300 rounded px-2 py-1 text-sm">
+                      <option value="" disabled selected>Update Status</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">HVAC not cooling properly</div>
+                    <div class="text-sm text-gray-500 truncate max-w-xs">The air conditioner is running but not cooling the apartment...</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Ocean View 501</div>
+                    <div class="text-xs text-gray-500">123 Beach Rd</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Jessica Williams</div>
+                    <div class="text-xs text-gray-500">jessica@example.com</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Mar 26, 2025</div>
+                    <div class="text-xs text-gray-500">4 days ago</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-progress px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">In Progress</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">View</button>
+                    <select class="border border-gray-300 rounded px-2 py-1 text-sm">
+                      <option value="" disabled selected>Update Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">Broken door handle</div>
+                    <div class="text-sm text-gray-500 truncate max-w-xs">The bathroom door handle is loose and about to fall off...</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Downtown Loft 304</div>
+                    <div class="text-xs text-gray-500">789 High St</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Michael Chen</div>
+                    <div class="text-xs text-gray-500">michael@example.com</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Mar 22, 2025</div>
+                    <div class="text-xs text-gray-500">8 days ago</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-completed px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">Completed</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">View</button>
+                    <select class="border border-gray-300 rounded px-2 py-1 text-sm">
+                      <option value="" disabled selected>Update Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="in-progress">In Progress</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 flex items-center justify-between">
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">3</span> of <span class="font-medium">15</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      1
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      2
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      3
+                    </a>
+                    <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Reports Section -->
+        <section id="reports-section" class="admin-section hidden">
+          <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-2">
+              <div class="w-40">
+                <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <option value="last-6-months">Last 6 Months</option>
+                  <option value="last-year">Last Year</option>
+                  <option value="all-time">All Time</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary rounded-lg px-4 py-2 flex items-center justify-center">
+              <i class="fas fa-file-export mr-2"></i> Export Reports
+            </button>
+          </div>
+          
+          <!-- Reports Dashboard -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Monthly Rent Collection -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Monthly Rent Collection</h3>
+              <div class="chart-container">
+                <canvas id="rentChart"></canvas>
+              </div>
+              <div class="mt-4 flex justify-between text-sm text-gray-600">
+                <div>
+                  <p>Total Collected:</p>
+                  <p class="text-lg font-bold text-gray-900">$24,350.00</p>
+                </div>
+                <div>
+                  <p>Outstanding:</p>
+                  <p class="text-lg font-bold text-red-600">$3,200.00</p>
+                </div>
+                <div>
+                  <p>Collection Rate:</p>
+                  <p class="text-lg font-bold text-green-600">88.4%</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Occupancy Rate -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Occupancy Rate</h3>
+              <div class="chart-container">
+                <canvas id="occupancyChart"></canvas>
+              </div>
+              <div class="mt-4 flex justify-between text-sm text-gray-600">
+                <div>
+                  <p>Total Units:</p>
+                  <p class="text-lg font-bold text-gray-900">24</p>
+                </div>
+                <div>
+                  <p>Occupied:</p>
+                  <p class="text-lg font-bold text-green-600">20</p>
+                </div>
+                <div>
+                  <p>Occupancy Rate:</p>
+                  <p class="text-lg font-bold text-blue-600">83.3%</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Maintenance Requests -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Maintenance Requests</h3>
+              <div class="chart-container">
+                <canvas id="maintenanceChart"></canvas>
+              </div>
+              <div class="mt-4 flex justify-between text-sm text-gray-600">
+                <div>
+                  <p>Total Requests:</p>
+                  <p class="text-lg font-bold text-gray-900">42</p>
+                </div>
+                <div>
+                  <p>Avg. Resolution Time:</p>
+                  <p class="text-lg font-bold text-gray-900">3.2 days</p>
+                </div>
+                <div>
+                  <p>Completion Rate:</p>
+                  <p class="text-lg font-bold text-green-600">92%</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Revenue Breakdown -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Revenue Breakdown</h3>
+              <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+              </div>
+              <div class="mt-4 flex justify-between text-sm text-gray-600">
+                <div>
+                  <p>Total Revenue:</p>
+                  <p class="text-lg font-bold text-gray-900">$148,500.00</p>
+                </div>
+                <div>
+                  <p>Growth YoY:</p>
+                  <p class="text-lg font-bold text-green-600">+8.3%</p>
+                </div>
+                <div>
+                  <p>Expenses:</p>
+                  <p class="text-lg font-bold text-red-600">$52,350.00</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Tenant Dashboard (hidden by default) -->
+  <div id="tenant-dashboard" class="hidden min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="bg-indigo-800 text-white w-64 flex flex-col sidebar">
+      <div class="p-4 flex items-center justify-between border-b border-indigo-700">
+        <h2 class="text-xl font-bold">Apartment Hub</h2>
+        <button id="tenant-collapse-sidebar" class="md:hidden text-white focus:outline-none">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <div class="p-4 border-b border-indigo-700">
+        <div class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <p class="font-medium">John Tenant</p>
+            <p class="text-xs text-indigo-300">Tenant since Jan 2025</p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-grow p-2">
+        <ul class="space-y-1">
+          <li>
+            <a href="javascript:void(0)" class="tenant-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-white bg-indigo-700" data-target="browse-section">
+              <i class="fas fa-search w-6"></i>
+              <span>Browse Apartments</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" class="tenant-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-indigo-300 hover:text-white" data-target="applications-section">
+              <i class="fas fa-file-alt w-6"></i>
+              <span>My Applications</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" class="tenant-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-indigo-300 hover:text-white" data-target="pay-rent-section">
+              <i class="fas fa-credit-card w-6"></i>
+              <span>Pay Rent</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" class="tenant-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-indigo-300 hover:text-white" data-target="tenant-maintenance-section">
+              <i class="fas fa-tools w-6"></i>
+              <span>Maintenance Requests</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" class="tenant-nav-item sidebar-item flex items-center px-4 py-2 rounded-lg text-indigo-300 hover:text-white" data-target="profile-section">
+              <i class="fas fa-user-circle w-6"></i>
+              <span>Profile</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div class="p-4 border-t border-indigo-700">
+        <a href="javascript:void(0)" id="tenant-logout" class="flex items-center text-indigo-300 hover:text-white">
+          <i class="fas fa-sign-out-alt w-6"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Top Navigation -->
+      <header class="bg-white shadow-sm z-10">
+        <div class="flex items-center justify-between px-4 py-3">
+          <div class="flex items-center space-x-2">
+            <button id="tenant-mobile-menu-button" class="md:hidden text-gray-600">
+              <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800" id="tenant-page-title">Browse Apartments</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <button class="text-gray-600 hover:text-gray-800">
+                <i class="far fa-bell text-xl"></i>
+                <span class="notification-badge bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
+              </button>
+            </div>
+            <div class="border-l border-gray-300 h-6"></div>
+            <div class="relative">
+              <button class="flex items-center space-x-1 text-gray-700">
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="hidden md:inline">John</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Sections -->
+      <main class="flex-grow p-4 overflow-y-auto bg-gray-50">
+        <!-- Browse Apartments Section -->
+        <section id="browse-section" class="tenant-section">
+          <!-- Search Controls -->
+          <div class="mb-6 flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex items-center flex-grow space-x-2">
+              <div class="relative flex-grow">
+                <input type="text" placeholder="Search by location, features..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+              <div class="w-40">
+                <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <option value="all">All Prices</option>
+                  <option value="500-1000">$500 - $1000</option>
+                  <option value="1000-1500">$1000 - $1500</option>
+                  <option value="1500+">$1500+</option>
+                </select>
+              </div>
+              <div class="w-40">
+                <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <option value="all">Any Beds</option>
+                  <option value="1">1+ Bed</option>
+                  <option value="2">2+ Beds</option>
+                  <option value="3">3+ Beds</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary rounded-lg px-4 py-2 flex items-center justify-center">
+              <i class="fas fa-filter mr-2"></i> Apply Filters
+            </button>
+          </div>
+          
+          <!-- Apartments Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Apartment Card 1 -->
+            <div class="apartment-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="h-48 bg-cover bg-center bg-gray-200" style="background-image: url('https://cdn.pixabay.com/photo/2014/08/11/21/39/wall-416060_1280.jpg')"></div>
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">Luxury Suite 101</h3>
+                    <p class="text-sm text-gray-500">Downtown Area</p>
+                  </div>
+                  <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">Available</span>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-700">
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bed mr-2 text-indigo-500"></i>
+                    <span>2 Beds</span>
+                  </div>
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bath mr-2 text-indigo-500"></i>
+                    <span>1 Bath</span>
+                  </div>
+                  <div class="flex items-center">
+                    <i class="fas fa-ruler-combined mr-2 text-indigo-500"></i>
+                    <span>850 sq.ft</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-xl font-bold text-indigo-600">$1,200/mo</span>
+                  <button class="btn-primary px-4 py-1 rounded-md text-sm font-medium">Apply Now</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Apartment Card 2 -->
+            <div class="apartment-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="h-48 bg-cover bg-center bg-gray-200" style="background-image: url('https://cdn.pixabay.com/photo/2017/03/22/17/39/kitchen-2165756_1280.jpg')"></div>
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">Modern Flat 202</h3>
+                    <p class="text-sm text-gray-500">Westside Heights</p>
+                  </div>
+                  <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded-full">Occupied</span>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-700">
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bed mr-2 text-indigo-500"></i>
+                    <span>1 Bed</span>
+                  </div>
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bath mr-2 text-indigo-500"></i>
+                    <span>1 Bath</span>
+                  </div>
+                  <div class="flex items-center">
+                    <i class="fas fa-ruler-combined mr-2 text-indigo-500"></i>
+                    <span>650 sq.ft</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-xl font-bold text-indigo-600">$950/mo</span>
+                  <button class="bg-gray-300 px-4 py-1 rounded-md text-sm font-medium text-gray-600" disabled>Unavailable</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Apartment Card 3 -->
+            <div class="apartment-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="h-48 bg-cover bg-center bg-gray-200" style="background-image: url('https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg')"></div>
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">Garden View 303</h3>
+                    <p class="text-sm text-gray-500">Sunset District</p>
+                  </div>
+                  <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">Maintenance</span>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-700">
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bed mr-2 text-indigo-500"></i>
+                    <span>3 Beds</span>
+                  </div>
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bath mr-2 text-indigo-500"></i>
+                    <span>2 Baths</span>
+                  </div>
+                  <div class="flex items-center">
+                    <i class="fas fa-ruler-combined mr-2 text-indigo-500"></i>
+                    <span>1,200 sq.ft</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-xl font-bold text-indigo-600">$1,450/mo</span>
+                  <button class="bg-gray-300 px-4 py-1 rounded-md text-sm font-medium text-gray-600" disabled>Unavailable</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Apartment Card 4 -->
+            <div class="apartment-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="h-48 bg-cover bg-center bg-gray-200" style="background-image: url('https://cdn.pixabay.com/photo/2017/07/09/03/19/home-2486092_1280.jpg')"></div>
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">Downtown Loft 304</h3>
+                    <p class="text-sm text-gray-500">City Center</p>
+                  </div>
+                  <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">Available</span>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-700">
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bed mr-2 text-indigo-500"></i>
+                    <span>2 Beds</span>
+                  </div>
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bath mr-2 text-indigo-500"></i>
+                    <span>2 Baths</span>
+                  </div>
+                  <div class="flex items-center">
+                    <i class="fas fa-ruler-combined mr-2 text-indigo-500"></i>
+                    <span>950 sq.ft</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-xl font-bold text-indigo-600">$1,350/mo</span>
+                  <button class="btn-primary px-4 py-1 rounded-md text-sm font-medium">Apply Now</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Apartment Card 5 -->
+            <div class="apartment-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="h-48 bg-cover bg-center bg-gray-200" style="background-image: url('https://cdn.pixabay.com/photo/2014/07/10/17/18/large-home-389271_1280.jpg')"></div>
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">Riverside Apartment 401</h3>
+                    <p class="text-sm text-gray-500">River District</p>
+                  </div>
+                  <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">Available</span>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-700">
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bed mr-2 text-indigo-500"></i>
+                    <span>3 Beds</span>
+                  </div>
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bath mr-2 text-indigo-500"></i>
+                    <span>2 Baths</span>
+                  </div>
+                  <div class="flex items-center">
+                    <i class="fas fa-ruler-combined mr-2 text-indigo-500"></i>
+                    <span>1,350 sq.ft</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-xl font-bold text-indigo-600">$1,650/mo</span>
+                  <button class="btn-primary px-4 py-1 rounded-md text-sm font-medium">Apply Now</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Apartment Card 6 -->
+            <div class="apartment-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="h-48 bg-cover bg-center bg-gray-200" style="background-image: url('https://cdn.pixabay.com/photo/2014/12/27/14/37/living-room-581073_1280.jpg')"></div>
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">Cozy Studio 505</h3>
+                    <p class="text-sm text-gray-500">Arts District</p>
+                  </div>
+                  <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">Available</span>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-700">
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bed mr-2 text-indigo-500"></i>
+                    <span>Studio</span>
+                  </div>
+                  <div class="flex items-center mr-4">
+                    <i class="fas fa-bath mr-2 text-indigo-500"></i>
+                    <span>1 Bath</span>
+                  </div>
+                  <div class="flex items-center">
+                    <i class="fas fa-ruler-combined mr-2 text-indigo-500"></i>
+                    <span>500 sq.ft</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-xl font-bold text-indigo-600">$850/mo</span>
+                  <button class="btn-primary px-4 py-1 rounded-md text-sm font-medium">Apply Now</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Pagination -->
+          <div class="mt-8 flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+              <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600">
+                1
+              </a>
+              <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                2
+              </a>
+              <a href="javascript:void(0)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                3
+              </a>
+              <a href="javascript:void(0)" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </nav>
+          </div>
+        </section>
+        
+        <!-- My Applications Section -->
+        <section id="applications-section" class="tenant-section hidden">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">My Application History</h2>
+            <p class="text-gray-600">Track the status of your apartment applications</p>
+          </div>
+          
+          <!-- Applications Table -->
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apartment</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Application Date</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Rent</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-md bg-cover bg-center bg-gray-300" style="background-image: url('https://cdn.pixabay.com/photo/2014/08/11/21/39/wall-416060_1280.jpg')"></div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Luxury Suite 101</div>
+                        <div class="text-xs text-gray-500">Downtown Area</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Mar 29, 2025</div>
+                    <div class="text-xs text-gray-500">1 day ago</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-pending px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">Pending Review</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    $1,200/mo
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900">View Details</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-md bg-cover bg-center bg-gray-300" style="background-image: url('https://cdn.pixabay.com/photo/2017/07/09/03/19/home-2486092_1280.jpg')"></div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Downtown Loft 304</div>
+                        <div class="text-xs text-gray-500">City Center</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Mar 15, 2025</div>
+                    <div class="text-xs text-gray-500">15 days ago</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-rejected px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">Rejected</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    $1,350/mo
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900">View Details</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-md bg-cover bg-center bg-gray-300" style="background-image: url('https://cdn.pixabay.com/photo/2014/12/27/14/37/living-room-581073_1280.jpg')"></div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Cozy Studio 505</div>
+                        <div class="text-xs text-gray-500">Arts District</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Feb 28, 2025</div>
+                    <div class="text-xs text-gray-500">30 days ago</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-completed px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">Approved</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    $850/mo
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-indigo-600 hover:text-indigo-900">View Details</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- Pay Rent Section -->
+        <section id="pay-rent-section" class="tenant-section hidden">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Pay Your Rent</h2>
+            <p class="text-gray-600">Make secure online payments for your apartment</p>
+          </div>
+          
+          <!-- Current Apartment -->
+          <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <div class="p-6 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Your Current Apartment</h3>
+              <div class="flex flex-col md:flex-row md:items-center">
+                <div class="flex items-center">
+                  <div class="h-16 w-16 rounded-md bg-cover bg-center bg-gray-300 mr-4" style="background-image: url('https://cdn.pixabay.com/photo/2014/12/27/14/37/living-room-581073_1280.jpg')"></div>
+                  <div>
+                    <p class="font-medium text-gray-900">Cozy Studio 505</p>
+                    <p class="text-sm text-gray-500">Arts District, 789 Art Ave, #505</p>
+                    <p class="text-sm text-gray-500">Lease: Feb 28, 2025 - Feb 28, 2026</p>
+                  </div>
+                </div>
+                <div class="md:ml-auto mt-4 md:mt-0 flex flex-col items-start md:items-end">
+                  <span class="text-gray-700">Monthly Rent</span>
+                  <span class="text-2xl font-bold text-indigo-600">$850.00</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                <div>
+                  <h4 class="text-lg font-medium text-gray-900">Next Payment Due</h4>
+                  <p class="text-gray-600">April 1, 2025 <span class="text-red-600 font-medium">(in 2 days)</span></p>
+                </div>
+                <div class="mt-4 sm:mt-0">
+                  <p class="text-gray-700">Amount Due:</p>
+                  <p class="text-2xl font-bold text-gray-900">$850.00</p>
+                </div>
+              </div>
+              <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                  <div class="text-indigo-500 mt-1">
+                    <i class="fas fa-info-circle"></i>
+                  </div>
+                  <div class="ml-3">
+                    <h5 class="text-indigo-800 font-medium">Payment Information</h5>
+                    <p class="text-indigo-700 text-sm">Make your payment at least 3 days before the due date to ensure it's processed on time. Late payments may incur a fee of $25.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-6">
+                <h4 class="text-md font-medium text-gray-900 mb-2">Payment Method</h4>
+                <div class="flex items-center space-x-4 mb-4">
+                  <div class="relative">
+                    <input type="radio" id="payment-card" name="payment-method" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300" checked>
+                    <label for="payment-card" class="ml-2 text-sm text-gray-700">Credit/Debit Card</label>
+                  </div>
+                  <div class="relative">
+                    <input type="radio" id="payment-bank" name="payment-method" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                    <label for="payment-bank" class="ml-2 text-sm text-gray-700">Bank Transfer</label>
+                  </div>
+                </div>
+                <div class="flex flex-wrap -mx-2">
+                  <div class="px-2 w-full md:w-1/2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                    <input type="text" placeholder="1234 5678 9012 3456" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  </div>
+                  <div class="px-2 w-full md:w-1/4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                    <input type="text" placeholder="MM/YY" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  </div>
+                  <div class="px-2 w-full md:w-1/4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                    <input type="text" placeholder="123" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  </div>
+                </div>
+              </div>
+              <div class="border-t border-gray-200 pt-6 flex justify-end">
+                <button class="btn-primary rounded-lg px-6 py-2 flex items-center justify-center">
+                  <i class="fas fa-credit-card mr-2"></i> Pay $850.00
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Payment History -->
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Payment History</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Mar 1, 2025</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">PAY-28397XBC</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">$850.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-download mr-1"></i> Download</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Feb 1, 2025</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">PAY-19845YCW</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">$850.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-download mr-1"></i> Download</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Tenant Maintenance Section -->
+        <section id="tenant-maintenance-section" class="tenant-section hidden">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Maintenance Requests</h2>
+            <p class="text-gray-600">Submit and track your maintenance requests</p>
+          </div>
+          
+          <!-- New Request Form -->
+          <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">New Maintenance Request</h3>
+            </div>
+            <div class="p-6">
+              <form class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for="request-subject">Subject</label>
+                  <input id="request-subject" type="text" placeholder="Brief description of the issue" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for="request-type">Request Type</label>
+                  <select id="request-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Select a request type</option>
+                    <option value="plumbing">Plumbing</option>
+                    <option value="electrical">Electrical</option>
+                    <option value="hvac">HVAC (Heating/Cooling)</option>
+                    <option value="appliance">Appliance Repair</option>
+                    <option value="pest">Pest Control</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for="request-description">Description</label>
+                  <textarea id="request-description" rows="4" placeholder="Please provide detailed information about the issue" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Upload Images (optional)</label>
+                  <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div class="space-y-1 text-center">
+                      <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      <div class="flex text-sm text-gray-600">
+                        <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                          <span>Upload files</span>
+                          <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple>
+                        </label>
+                        <p class="pl-1">or drag and drop</p>
+                      </div>
+                      <p class="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 10MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Access Permission</label>
+                  <div class="flex items-center">
+                    <input type="checkbox" id="permission-check" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="permission-check" class="ml-2 block text-sm text-gray-700">
+                      I give permission for maintenance staff to enter my apartment to address this issue
+                    </label>
+                  </div>
+                </div>
+                <div class="pt-2">
+                  <button type="submit" class="btn-primary rounded-lg px-4 py-2 flex items-center justify-center">
+                    <i class="fas fa-paper-plane mr-2"></i> Submit Request
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Request History -->
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Request History</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4">
+                      <div class="text-sm font-medium text-gray-900">Broken dishwasher</div>
+                      <div class="text-sm text-gray-500 truncate max-w-xs">Dishwasher is not draining properly...</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      Mar 25, 2025
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="status-pending px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">Pending</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      Mar 25, 2025
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button class="text-indigo-600 hover:text-indigo-900">View Details</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4">
+                      <div class="text-sm font-medium text-gray-900">Light fixture replacement</div>
+                      <div class="text-sm text-gray-500 truncate max-w-xs">Bathroom light fixture not working...</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      Mar 10, 2025
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="status-progress px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">In Progress</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      Mar 15, 2025
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button class="text-indigo-600 hover:text-indigo-900">View Details</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4">
+                      <div class="text-sm font-medium text-gray-900">Leaking faucet</div>
+                      <div class="text-sm text-gray-500 truncate max-w-xs">Kitchen sink faucet is dripping...</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      Feb 18, 2025
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="status-completed px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">Completed</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      Feb 20, 2025
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button class="text-indigo-600 hover:text-indigo-900">View Details</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Profile Section -->
+        <section id="profile-section" class="tenant-section hidden">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Your Profile</h2>
+            <p class="text-gray-600">Update your personal information and settings</p>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+              <div class="flex items-center space-x-4 mb-6">
+                <div class="h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900">John Tenant</h3>
+                  <p class="text-gray-600">john@example.com</p>
+                </div>
+              </div>
+              
+              <form class="space-y-6">
+                <div class="border-t border-b border-gray-200 py-6">
+                  <h4 class="text-md font-medium text-gray-900 mb-4">Personal Information</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="profile-firstname">First Name</label>
+                      <input id="profile-firstname" type="text" value="John" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="profile-lastname">Last Name</label>
+                      <input id="profile-lastname" type="text" value="Tenant" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="profile-email">Email</label>
+                      <input id="profile-email" type="email" value="john@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="profile-phone">Phone</label>
+                      <input id="profile-phone" type="text" value="(555) 123-4567" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="border-b border-gray-200 pb-6">
+                  <h4 class="text-md font-medium text-gray-900 mb-4">Emergency Contact</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="emergency-name">Name</label>
+                      <input id="emergency-name" type="text" value="Jane Tenant" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="emergency-relation">Relationship</label>
+                      <input id="emergency-relation" type="text" value="Spouse" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="emergency-phone">Phone</label>
+                      <input id="emergency-phone" type="text" value="(555) 987-6543" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="emergency-email">Email</label>
+                      <input id="emergency-email" type="email" value="jane@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 class="text-md font-medium text-gray-900 mb-4">Change Password</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="current-password">Current Password</label>
+                      <input id="current-password" type="password" placeholder="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="new-password">New Password</label>
+                      <input id="new-password" type="password" placeholder="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1" for="confirm-password">Confirm New Password</label>
+                      <input id="confirm-password" type="password" placeholder="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="pt-4 flex justify-end">
+                  <button type="button" class="btn-secondary rounded-lg px-4 py-2 mr-3">Cancel</button>
+                  <button type="submit" class="btn-primary rounded-lg px-6 py-2">Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Add Apartment Modal (Hidden by Default) -->
+  <div id="add-apartment-modal" class="modal hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="modal-container bg-white w-full max-w-md mx-auto rounded-lg shadow-lg overflow-hidden transform transition-all">
+      <div class="px-6 py-4 bg-indigo-600 text-white flex justify-between items-center">
+        <h3 class="text-lg font-medium">Add New Apartment</h3>
+        <button id="close-modal" class="text-white hover:text-gray-200 focus:outline-none">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="add-apartment-form" class="p-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-title">Title</label>
+            <input id="apartment-title" type="text" placeholder="e.g., Luxury Suite 101" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-beds">Bedrooms</label>
+              <select id="apartment-beds" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <option value="">Select</option>
+                <option value="0">Studio</option>
+                <option value="1">1 Bedroom</option>
+                <option value="2">2 Bedrooms</option>
+                <option value="3">3 Bedrooms</option>
+                <option value="4">4+ Bedrooms</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-baths">Bathrooms</label>
+              <select id="apartment-baths" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <option value="">Select</option>
+                <option value="1">1 Bathroom</option>
+                <option value="1.5">1.5 Bathrooms</option>
+                <option value="2">2 Bathrooms</option>
+                <option value="2.5">2.5 Bathrooms</option>
+                <option value="3">3+ Bathrooms</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-size">Square Footage</label>
+              <input id="apartment-size" type="number" placeholder="e.g., 850" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-rent">Monthly Rent ($)</label>
+              <input id="apartment-rent" type="number" placeholder="e.g., 1200" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-address">Address</label>
+            <input id="apartment-address" type="text" placeholder="Street address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-city">City</label>
+              <input id="apartment-city" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-zip">ZIP Code</label>
+              <input id="apartment-zip" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="apartment-description">Description</label>
+            <textarea id="apartment-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <div class="flex space-x-4">
+              <div class="flex items-center">
+                <input type="radio" id="status-available" name="apartment-status" value="available" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500" checked>
+                <label for="status-available" class="ml-2 block text-sm text-gray-700">Available</label>
+              </div>
+              <div class="flex items-center">
+                <input type="radio" id="status-maintenance" name="apartment-status" value="maintenance" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
+                <label for="status-maintenance" class="ml-2 block text-sm text-gray-700">Maintenance</label>
+              </div>
+              <div class="flex items-center">
+                <input type="radio" id="status-occupied" name="apartment-status" value="occupied" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
+                <label for="status-occupied" class="ml-2 block text-sm text-gray-700">Occupied</label>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Upload Images</label>
+            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div class="space-y-1 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="flex text-sm text-gray-600">
+                  <label for="apartment-images" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                    <span>Upload files</span>
+                    <input id="apartment-images" name="apartment-images" type="file" class="sr-only" multiple>
+                  </label>
+                  <p class="pl-1">or drag and drop</p>
+                </div>
+                <p class="text-xs text-gray-500">
+                  PNG, JPG, GIF up to 10MB
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button type="button" id="cancel-add-apartment" class="btn-secondary rounded-lg px-4 py-2">Cancel</button>
+          <button type="submit" class="btn-primary rounded-lg px-4 py-2">Save Apartment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script id="app-script">
+    // DOM Elements
+    const authScreen = document.getElementById('auth-screen');
+    const adminDashboard = document.getElementById('admin-dashboard');
+    const tenantDashboard = document.getElementById('tenant-dashboard');
+    const loginTab = document.getElementById('login-tab');
+    const signupTab = document.getElementById('signup-tab');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const demoAdminBtn = document.getElementById('demo-admin');
+    const demoTenantBtn = document.getElementById('demo-tenant');
+    const adminLogoutBtn = document.getElementById('admin-logout');
+    const tenantLogoutBtn = document.getElementById('tenant-logout');
+    const pageTitle = document.getElementById('page-title');
+    const tenantPageTitle = document.getElementById('tenant-page-title');
+    const addApartmentButton = document.getElementById('add-apartment-button');
+    const addApartmentModal = document.getElementById('add-apartment-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const cancelAddApartmentBtn = document.getElementById('cancel-add-apartment');
+    const addApartmentForm = document.getElementById('add-apartment-form');
+
+    // Auth form tabs
+    loginTab.addEventListener('click', () => {
+      loginTab.classList.add('border-indigo-600', 'text-indigo-600');
+      loginTab.classList.remove('border-transparent', 'text-gray-500');
+      signupTab.classList.add('border-transparent', 'text-gray-500');
+      signupTab.classList.remove('border-indigo-600', 'text-indigo-600');
+      loginForm.classList.remove('hidden');
+      signupForm.classList.add('hidden');
+    });
+
+    signupTab.addEventListener('click', () => {
+      signupTab.classList.add('border-indigo-600', 'text-indigo-600');
+      signupTab.classList.remove('border-transparent', 'text-gray-500');
+      loginTab.classList.add('border-transparent', 'text-gray-500');
+      loginTab.classList.remove('border-indigo-600', 'text-indigo-600');
+      signupForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    });
+
+    // Demo logins
+    demoAdminBtn.addEventListener('click', () => {
+      authScreen.classList.add('hidden');
+      adminDashboard.classList.remove('hidden');
+    });
+
+    demoTenantBtn.addEventListener('click', () => {
+      authScreen.classList.add('hidden');
+      tenantDashboard.classList.remove('hidden');
+    });
+
+    // Logout functionality
+    adminLogoutBtn.addEventListener('click', () => {
+      adminDashboard.classList.add('hidden');
+      authScreen.classList.remove('hidden');
+      loginForm.reset();
+    });
+
+    tenantLogoutBtn.addEventListener('click', () => {
+      tenantDashboard.classList.add('hidden');
+      authScreen.classList.remove('hidden');
+      loginForm.reset();
+    });
+
+    // Form submissions
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      
+      if (email && password) {
+        // For demo purposes, simulate admin login
+        authScreen.classList.add('hidden');
+        adminDashboard.classList.remove('hidden');
+      }
+    });
+
+    signupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const firstName = document.getElementById('signup-firstname').value;
+      const lastName = document.getElementById('signup-lastname').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm').value;
+      const accountType = document.querySelector('input[name="account-type"]:checked').value;
+      
+      if (firstName && lastName && email && password && confirmPassword) {
+        if (password !== confirmPassword) {
+          alert("Passwords don't match!");
+          return;
+        }
+        
+        // For demo purposes, simulate signup and login
+        authScreen.classList.add('hidden');
+        if (accountType === 'landlord') {
+          adminDashboard.classList.remove('hidden');
+        } else {
+          tenantDashboard.classList.remove('hidden');
+        }
+      }
+    });
+
+    // Admin Dashboard Navigation
+    const adminNavItems = document.querySelectorAll('.admin-nav-item');
+    const adminSections = document.querySelectorAll('.admin-section');
+
+    adminNavItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const targetSection = item.getAttribute('data-target');
+        
+        // Update active nav item
+        adminNavItems.forEach(navItem => {
+          navItem.classList.remove('bg-indigo-700', 'text-white');
+          navItem.classList.add('text-indigo-300', 'hover:text-white');
+        });
+        item.classList.add('bg-indigo-700', 'text-white');
+        item.classList.remove('text-indigo-300', 'hover:text-white');
+        
+        // Show target section, hide others
+        adminSections.forEach(section => {
+          section.classList.add('hidden');
+        });
+        document.getElementById(targetSection).classList.remove('hidden');
+        
+        // Update page title
+        pageTitle.textContent = item.querySelector('span').textContent;
+      });
+    });
+
+    // Tenant Dashboard Navigation
+    const tenantNavItems = document.querySelectorAll('.tenant-nav-item');
+    const tenantSections = document.querySelectorAll('.tenant-section');
+
+    tenantNavItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const targetSection = item.getAttribute('data-target');
+        
+        // Update active nav item
+        tenantNavItems.forEach(navItem => {
+          navItem.classList.remove('bg-indigo-700', 'text-white');
+          navItem.classList.add('text-indigo-300', 'hover:text-white');
+        });
+        item.classList.add('bg-indigo-700', 'text-white');
+        item.classList.remove('text-indigo-300', 'hover:text-white');
+        
+        // Show target section, hide others
+        tenantSections.forEach(section => {
+          section.classList.add('hidden');
+        });
+        document.getElementById(targetSection).classList.remove('hidden');
+        
+        // Update page title
+        tenantPageTitle.textContent = item.querySelector('span').textContent;
+      });
+    });
+
+    // Add Apartment Modal
+    addApartmentButton?.addEventListener('click', () => {
+      addApartmentModal.classList.remove('hidden');
+    });
+
+    closeModalBtn?.addEventListener('click', () => {
+      addApartmentModal.classList.add('hidden');
+    });
+
+    cancelAddApartmentBtn?.addEventListener('click', () => {
+      addApartmentModal.classList.add('hidden');
+    });
+
+    addApartmentForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // In a real app, we'd collect form data and submit to API
+      addApartmentModal.classList.add('hidden');
+      // Could show a success message or refresh the apartment list
+    });
+
+    // Close modal when clicking outside
+    addApartmentModal?.addEventListener('click', (e) => {
+      if (e.target === addApartmentModal) {
+        addApartmentModal.classList.add('hidden');
+      }
+    });
+
+    // Initialize Charts for Reports section
+    if (document.getElementById('rentChart')) {
+      const rentCtx = document.getElementById('rentChart').getContext('2d');
+      const rentChart = new Chart(rentCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+          datasets: [{
+            label: 'Collected',
+            backgroundColor: '#4F46E5',
+            data: [19500, 20100, 21000, 22350, 23100, 24350]
+          }, {
+            label: 'Outstanding',
+            backgroundColor: '#EF4444',
+            data: [1800, 2200, 1500, 2800, 3400, 3200]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: false
+            }
+          }
+        }
+      });
+
+      const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+      const occupancyChart = new Chart(occupancyCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Occupied', 'Available', 'Maintenance'],
+          datasets: [{
+            backgroundColor: ['#4F46E5', '#10B981', '#3B82F6'],
+            data: [20, 2, 2]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          }
+        }
+      });
+
+      const maintenanceCtx = document.getElementById('maintenanceChart').getContext('2d');
+      const maintenanceChart = new Chart(maintenanceCtx, {
+        type: 'line',
+        data: {
+          labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+          datasets: [{
+            label: 'New Requests',
+            borderColor: '#EF4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            data: [8, 5, 12, 7, 6, 9],
+            tension: 0.4,
+            fill: true
+          }, {
+            label: 'Resolved',
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            data: [7, 6, 10, 8, 7, 8],
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+
+      const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+      const revenueChart = new Chart(revenueCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Rent', 'Deposits', 'Late Fees', 'Application Fees'],
+          datasets: [{
+            backgroundColor: ['#4F46E5', '#10B981', '#F59E0B', '#6366F1'],
+            data: [125000, 15000, 4500, 4000]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          }
+        }
+      });
+    }
+
+    // Mobile menu for sidebar
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const tenantMobileMenuButton = document.getElementById('tenant-mobile-menu-button');
+    const sidebar = document.querySelector('.sidebar');
+    
+    mobileMenuButton?.addEventListener('click', () => {
+      sidebar?.classList.toggle('hidden');
+    });
+    
+    tenantMobileMenuButton?.addEventListener('click', () => {
+      sidebar?.classList.toggle('hidden');
+    });
+  </script>
+</body>
+</html>
